@@ -4,22 +4,26 @@ namespace Henzeb\Pipeline\Pipes;
 
 use Closure;
 use Henzeb\Pipeline\Concerns\HandlesPipe;
+use Henzeb\Pipeline\Contracts\HasPipes;
 
-class ResolvingPipe
+class ResolvingPipe implements HasPipes
 {
     use HandlesPipe;
 
+    private array $pipes;
+
     public function __construct(private string $abstract, private array $parameters = [])
     {
+        $this->pipes[] = fn() => resolve($this->abstract, $this->parameters);
     }
 
-    private function handlePipe(string $method, mixed $passable, Closure $next): mixed
+    protected function handlePipe(string $viaMethod, mixed $passable, Closure $next): mixed
     {
         return $this->sendThroughSubPipeline(
-            resolve($this->abstract, $this->parameters),
+            $this->pipes[0](),
             $passable,
             $next,
-            $method
+            $viaMethod
         );
     }
 }

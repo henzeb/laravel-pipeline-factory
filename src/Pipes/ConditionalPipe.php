@@ -4,10 +4,11 @@ namespace Henzeb\Pipeline\Pipes;
 
 use Closure;
 use Henzeb\Pipeline\Concerns\HandlesPipe;
+use Henzeb\Pipeline\Contracts\HasPipes;
 use Henzeb\Pipeline\Contracts\PipeCondition;
 use Illuminate\Support\Arr;
 
-class ConditionalPipe
+class ConditionalPipe implements HasPipes
 {
     use HandlesPipe;
 
@@ -16,9 +17,9 @@ class ConditionalPipe
     private array $else = [];
     private bool $stopIfWhenMatches = false;
     private bool $stopIfUnlessMatches = false;
-    private bool $stopWhenNothingMatches = false;
+    private bool $stopWhenNoMatches = false;
 
-    private function handlePipe(string $methodName, mixed $passable, Closure $next): mixed
+    protected function handlePipe(string $viaMethod, mixed $passable, Closure $next): mixed
     {
         $matches = $this->getPipesBasedOnConditions($passable);
 
@@ -30,11 +31,11 @@ class ConditionalPipe
             $matches['pipes'] ?: $this->else,
             $passable,
             $next,
-            $methodName
+            $viaMethod
         );
     }
 
-    public function when(string|PipeCondition|Closure $condition, mixed $pipes, bool $stopProcessing = false): self
+    public function when(PipeCondition|Closure $condition, mixed $pipes, bool $stopProcessing = false): self
     {
         $this->when[] = [
             'condition' => $this->prepareCondition($condition),
@@ -45,7 +46,7 @@ class ConditionalPipe
         return $this;
     }
 
-    public function unless(string|PipeCondition|Closure $condition, mixed $pipes, bool $stopProcessing = false): self
+    public function unless(PipeCondition|Closure $condition, mixed $pipes, bool $stopProcessing = false): self
     {
         $this->unless[] = [
             'condition' => $this->prepareCondition($condition),
@@ -77,25 +78,17 @@ class ConditionalPipe
 
     public function stopProcessingIfNothingMatches(): self
     {
-        $this->stopWhenNothingMatches = true;
+        $this->stopWhenNoMatches = true;
         return $this;
     }
 
-    private function prepareCondition(string|PipeCondition|Closure $condition): Closure
+    private function prepareCondition(PipeCondition|Closure $condition): Closure
     {
-        if (is_callable($condition)) {
-            return Closure::fromCallable($condition);
+        if ($condition instanceof Closure) {
+            return $condition;
         }
 
-        return function (mixed $passable) use ($condition): bool {
-            static $resolvedCondition = null;
-            if (!$resolvedCondition && is_string($condition)) {
-                $resolvedCondition = resolve($condition);
-            }
-            $resolvedCondition ??= $condition;
-
-            return $resolvedCondition->test($passable);
-        };
+        return fn(mixed $passable): bool => $condition->test($passable);
     }
 
     private function getPipesBasedOnConditions(mixed $passable): array
@@ -104,7 +97,7 @@ class ConditionalPipe
 
         list($pipes, $stopProcessing) = $this->getUnlessPipesBasedOnCondition($passable, $pipes, $stopProcessing);
 
-        if ($this->stopWhenNothingMatches && empty($pipes)) {
+        if ($this->stopWhenNoMatches && empty($pipes)) {
             $stopProcessing = true;
         }
 
@@ -138,5 +131,25 @@ class ConditionalPipe
         }
 
         return [$pipes, $stopProcessing];
+    }
+
+    public function preparePipes(Closure $prepare): void
+    {
+        $this->when = $this->preparePipesFor($this->when, $prepare);
+
+        $this->unless = $this->preparePipesFor($this->unless, $prepare);
+
+        $this->else = array_merge(... array_map(fn(mixed $pipe) => $prepare([$pipe]), $this->else));
+    }
+
+    private function preparePipesFor(array $conditions, Closure $prepare): array
+    {
+        return array_map(
+            function (array $condition) use ($prepare) {
+                $condition['pipes'] = $prepare($condition['pipes']);
+                return $condition;
+            },
+            $conditions
+        );
     }
 }

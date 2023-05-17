@@ -4,23 +4,25 @@ namespace Henzeb\Pipeline\Pipes;
 
 use Closure;
 use Henzeb\Pipeline\Concerns\HandlesPipe;
+use Henzeb\Pipeline\Contracts\HasPipes;
 
-class AdapterPipe
+class AdapterPipe implements HasPipes
 {
     use HandlesPipe;
 
     public function __construct(
-        private mixed  $pipe,
-        private string $via
+        private mixed  $pipes,
+        private ?string $via
     ) {
     }
-    private function handlePipe(string $viaMethod, mixed $passable, Closure $next): mixed
+
+    protected function handlePipe(string $viaMethod, mixed $passable, Closure $next): mixed
     {
         return $this->sendThroughSubPipeline(
-            $this->pipe,
+            $this->pipes,
             $passable,
             $next,
-            $this->via
+            $this->via ?? $viaMethod
         );
     }
 }

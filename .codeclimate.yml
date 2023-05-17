@@ -4,6 +4,7 @@ plugins:
     exclude_patterns:
       - vendor
       - LICENSE.md
+      - CONTRIBUTING.md
     enabled: true
     checks:
       MD029:

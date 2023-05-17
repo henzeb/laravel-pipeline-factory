@@ -4,17 +4,21 @@ namespace Henzeb\Pipeline\Tests\Unit\Pipes;
 
 use Closure;
 use Henzeb\Pipeline\Pipes\ResolvingPipe;
-use Henzeb\Pipeline\Tests\Helpers\PipelineAssertions;
+use Henzeb\Pipeline\Tests\Helpers\PipeAssertions;
 use Illuminate\Pipeline\Pipeline;
 use Orchestra\Testbench\TestCase;
 
 class ResolvingPipeTest extends TestCase
 {
-    use PipelineAssertions;
+    use PipeAssertions;
 
     public function testHandlesPipe(): void
     {
         $this->assertHandlesPipe(ResolvingPipe::class);
+    }
+
+    public function testImplementsHasPipes() {
+        $this->assertImplementsHasPipes(ResolvingPipe::class);
     }
 
     public function testResolves(): void

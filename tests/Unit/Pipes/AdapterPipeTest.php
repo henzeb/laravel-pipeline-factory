@@ -5,13 +5,13 @@ namespace Henzeb\Pipeline\Tests\Unit\Pipes;
 use Closure;
 use Error;
 use Henzeb\Pipeline\Pipes\AdapterPipe;
-use Henzeb\Pipeline\Tests\Helpers\PipelineAssertions;
+use Henzeb\Pipeline\Tests\Helpers\PipeAssertions;
 use Orchestra\Testbench\TestCase;
 use stdClass;
 
 class AdapterPipeTest extends TestCase
 {
-    use PipelineAssertions;
+    use PipeAssertions;
 
     public function testHandlesPipe(): void
     {

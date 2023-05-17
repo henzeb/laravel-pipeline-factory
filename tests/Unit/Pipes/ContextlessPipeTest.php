@@ -4,17 +4,21 @@ namespace Henzeb\Pipeline\Tests\Unit\Pipes;
 
 use Closure;
 use Henzeb\Pipeline\Pipes\ContextlessPipe;
-use Henzeb\Pipeline\Tests\Helpers\PipelineAssertions;
+use Henzeb\Pipeline\Tests\Helpers\PipeAssertions;
 use PHPUnit\Framework\TestCase;
 use stdClass;
 
 class ContextlessPipeTest extends TestCase
 {
-    use PipelineAssertions;
+    use PipeAssertions;
 
     public function testShouldImplementHandlesPipe(): void
     {
         $this->assertHandlesPipe(ContextlessPipe::class);
+    }
+
+    public function testImplementsHasPipes() {
+        $this->assertImplementsHasPipes(ContextlessPipe::class);
     }
 
     private function getContextlessPipe(string $newPassable = null): stdClass

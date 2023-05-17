@@ -20,12 +20,12 @@
     ],
     "require": {
         "php": "^8.0",
-        "illuminate/support": "^9.0|^10"
+        "illuminate/support": "^9.0.0|^10"
     },
     "require-dev": {
         "infection/infection": "^0.26.19",
         "nesbot/carbon": "v2.64.0",
-        "orchestra/testbench": "^v7.0.0|8.0",
+        "orchestra/testbench": "^v7.6.0|8.0",
         "phpstan/phpstan": "^1.4",
         "phpunit/phpunit": "^9.6.6|^10"
     },
