@@ -44,7 +44,8 @@
         "test": "vendor/bin/phpunit",
         "test-coverage-txt": "XDEBUG_MODE=coverage vendor/bin/phpunit --coverage-text",
         "test-coverage": "XDEBUG_MODE=coverage vendor/bin/phpunit --coverage-html coverage",
-        "test-dox": "vendor/bin/phpunit --testdox"
+        "test-dox": "vendor/bin/phpunit --testdox",
+        "infection": "vendor/bin/infection --git-diff-filter=AM"
     },
     "config": {
         "sort-packages": true,

@@ -11,9 +11,12 @@ use Henzeb\Pipeline\Pipes\AdapterPipe;
 use Henzeb\Pipeline\Pipes\DefinitionPipe;
 use Henzeb\Pipeline\Pipes\EventPipe;
 use Henzeb\Pipeline\Pipes\EventsPipe;
+use Henzeb\Pipeline\Pipes\JobPipe;
+use Henzeb\Pipeline\Pipes\QueuePipe;
 use Henzeb\Pipeline\Pipes\RescuePipe;
 use Henzeb\Pipeline\Pipes\ResolvingPipe;
 use Henzeb\Pipeline\Pipes\TransactionPipe;
+use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Support\Str;
 
 class PipeFactory
@@ -104,6 +107,15 @@ class PipeFactory
         return resolve(DefinitionPipe::class, ['pipelineDefinition' => $definition]);
     }
 
+    public function job(ShouldQueue|string|array $job, array $parameters = []): JobPipe
+    {
+        return resolve(JobPipe::class, ['job' => $job, 'parameters' => $parameters]);
+    }
+
+    public function queue(mixed $pipes): QueuePipe
+    {
+        return resolve(QueuePipe::class, ['pipes' => $pipes]);
+    }
 
     private function fromCallable(callable|string|null $callable): ?Closure
     {

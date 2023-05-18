@@ -11,9 +11,12 @@ use Henzeb\Pipeline\Pipes\AdapterPipe;
 use Henzeb\Pipeline\Pipes\ContextlessPipe;
 use Henzeb\Pipeline\Pipes\EventPipe;
 use Henzeb\Pipeline\Pipes\EventsPipe;
+use Henzeb\Pipeline\Pipes\JobPipe;
+use Henzeb\Pipeline\Pipes\QueuePipe;
 use Henzeb\Pipeline\Pipes\RescuePipe;
 use Henzeb\Pipeline\Pipes\ResolvingPipe;
 use Henzeb\Pipeline\Pipes\TransactionPipe;
+use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Support\Str;
 use Mockery;
 use Orchestra\Testbench\TestCase;
@@ -136,12 +139,12 @@ class PipeFactoryTest extends TestCase
 
         $conditional = Mockery::mock(ConditionalPipe::class);
 
-        $conditional->expects('when')->andReturnUsing(function(Closure $closure) use ($conditional){
+        $conditional->expects('when')->andReturnUsing(function (Closure $closure) use ($conditional) {
             $this->assertSame('test', $closure());
             return $conditional;
         });
 
-        $conditional->expects('when')->andReturnUsing(function(Closure $closure) use ($conditional){
+        $conditional->expects('when')->andReturnUsing(function (Closure $closure) use ($conditional) {
             $this->assertSame('test', $closure());
             return $conditional;
         });
@@ -190,12 +193,12 @@ class PipeFactoryTest extends TestCase
 
         $conditional = Mockery::mock(ConditionalPipe::class);
 
-        $conditional->expects('unless')->andReturnUsing(function(Closure $closure) use ($conditional){
+        $conditional->expects('unless')->andReturnUsing(function (Closure $closure) use ($conditional) {
             $this->assertSame('test', $closure());
             return $conditional;
         });
 
-        $conditional->expects('unless')->andReturnUsing(function(Closure $closure) use ($conditional){
+        $conditional->expects('unless')->andReturnUsing(function (Closure $closure) use ($conditional) {
             $this->assertSame('test', $closure());
             return $conditional;
         });
@@ -417,5 +420,50 @@ class PipeFactoryTest extends TestCase
             ]
         );
         $this->assertSame($rescue, $actual);
+    }
+
+    public function testShouldResolveJobPipe()
+    {
+        $job = new class implements ShouldQueue {
+        };
+
+        $jobPipe = Mockery::mock(JobPipe::class);
+
+        $this->app->bind(JobPipe::class, function ($app, array $parameters) use ($job, $jobPipe) {
+            $this->assertEquals(
+                ['job' => $job::class, 'parameters' => ['myparams' => true]],
+                $parameters
+            );
+            return $jobPipe;
+        });
+
+        $actual = (new PipeFactory())->job(
+            $job::class,
+            [
+                'myparams' => true
+            ]
+        );
+
+        $this->assertSame($jobPipe, $actual);
+    }
+
+    public function testShouldResolveQueuePipe()
+    {
+
+        $queuePipe = Mockery::mock(QueuePipe::class);
+
+        $this->app->bind(QueuePipe::class, function ($app, array $parameters) use ($queuePipe) {
+            $this->assertEquals(
+                ['pipes' => [RescuePipe::class, EventPipe::class]],
+                $parameters
+            );
+            return $queuePipe;
+        });
+
+        $actual = (new PipeFactory())->queue(
+            [RescuePipe::class, EventPipe::class],
+        );
+
+        $this->assertSame($queuePipe, $actual);
     }
 }
