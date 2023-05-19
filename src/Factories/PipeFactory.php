@@ -9,15 +9,18 @@ use Henzeb\Pipeline\Pipes\ConditionalPipe;
 use Henzeb\Pipeline\Pipes\ContextlessPipe;
 use Henzeb\Pipeline\Pipes\AdapterPipe;
 use Henzeb\Pipeline\Pipes\DefinitionPipe;
+use Henzeb\Pipeline\Pipes\EachPipe;
 use Henzeb\Pipeline\Pipes\EventPipe;
 use Henzeb\Pipeline\Pipes\EventsPipe;
 use Henzeb\Pipeline\Pipes\JobPipe;
 use Henzeb\Pipeline\Pipes\QueuePipe;
 use Henzeb\Pipeline\Pipes\RescuePipe;
 use Henzeb\Pipeline\Pipes\ResolvingPipe;
+use Henzeb\Pipeline\Pipes\ThrowPipe;
 use Henzeb\Pipeline\Pipes\TransactionPipe;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Support\Str;
+use Throwable;
 
 class PipeFactory
 {
@@ -115,6 +118,27 @@ class PipeFactory
     public function queue(mixed $pipes): QueuePipe
     {
         return resolve(QueuePipe::class, ['pipes' => $pipes]);
+    }
+
+    public function throw(string|Throwable|callable $throwable): ThrowPipe
+    {
+        if (is_string($throwable)
+            && class_exists($throwable)
+            && method_exists($throwable, '__invoke')
+        ) {
+            $throwable = $this->fromCallable($throwable);
+        }
+        return resolve(
+            ThrowPipe::class,
+            [
+                'throwable' => is_string($throwable) ? resolve($throwable) : $throwable
+            ]
+        );
+    }
+
+    public function each(mixed $pipes): EachPipe
+    {
+        return resolve(EachPipe::class, ['pipes' => $pipes]);
     }
 
     private function fromCallable(callable|string|null $callable): ?Closure

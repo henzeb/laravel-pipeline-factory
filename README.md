@@ -68,6 +68,7 @@ The following pipes are available:
 - [The Rescue Pipe](docs/rescue.md)
 - [The Resolving Pipe](docs/resolving.md)
 - [The Transactional Pipe](docs/transaction.md)
+- [The Throw Pipe](docs/throw.md)
 
 ## Testing this package
 

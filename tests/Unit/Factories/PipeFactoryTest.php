@@ -3,18 +3,21 @@
 namespace Henzeb\Pipeline\Tests\Unit\Factories;
 
 use Closure;
+use Exception;
 use Henzeb\Pipeline\Contracts\PipeCondition;
 use Henzeb\Pipeline\Factories\PipeFactory;
 use Henzeb\Pipeline\Pipes\ConditionalPipe;
 use Henzeb\Pipeline\Pipes\ContextlessClosurePipe;
 use Henzeb\Pipeline\Pipes\AdapterPipe;
 use Henzeb\Pipeline\Pipes\ContextlessPipe;
+use Henzeb\Pipeline\Pipes\EachPipe;
 use Henzeb\Pipeline\Pipes\EventPipe;
 use Henzeb\Pipeline\Pipes\EventsPipe;
 use Henzeb\Pipeline\Pipes\JobPipe;
 use Henzeb\Pipeline\Pipes\QueuePipe;
 use Henzeb\Pipeline\Pipes\RescuePipe;
 use Henzeb\Pipeline\Pipes\ResolvingPipe;
+use Henzeb\Pipeline\Pipes\ThrowPipe;
 use Henzeb\Pipeline\Pipes\TransactionPipe;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Support\Str;
@@ -465,5 +468,91 @@ class PipeFactoryTest extends TestCase
         );
 
         $this->assertSame($queuePipe, $actual);
+    }
+
+    public function testResolvesThrowPipe(){
+        $throwPipe = Mockery::mock(ThrowPipe::class);
+
+        $this->app->bind(
+            ThrowPipe::class,
+            function($app, $parameters) use ($throwPipe) {
+                $this->assertInstanceOf(Exception::class, $parameters['throwable']);
+                return $throwPipe;
+            }
+        );
+
+        $this->assertSame((new PipeFactory())->throw(Exception::class), $throwPipe);
+    }
+
+    public function testResolvesThrowPipeWithInstance(){
+        $throwPipe = Mockery::mock(ThrowPipe::class);
+
+        $exception = new Exception('test');
+
+        $this->app->bind(
+            ThrowPipe::class,
+            function($app, $parameters) use ($throwPipe, $exception) {
+                $this->assertSame($exception, $parameters['throwable']);
+                return $throwPipe;
+            }
+        );
+
+        $this->assertSame((new PipeFactory())->throw($exception), $throwPipe);
+    }
+
+    public function testResolvesThrowPipeWithCallableClass(){
+        $throwPipe = Mockery::mock(ThrowPipe::class);
+
+        $exception = new class {
+            public function __invoke()
+            {
+                // TODO: Implement __invoke() method.
+            }
+        };
+
+        $this->app->bind(
+            ThrowPipe::class,
+            function($app, $parameters) use ($throwPipe, $exception) {
+                $this->assertSame($exception, $parameters['throwable']);
+                return $throwPipe;
+            }
+        );
+
+        $this->assertSame((new PipeFactory())->throw($exception), $throwPipe);
+    }
+
+    public function testResolvesThrowPipeWithClosure(){
+        $throwPipe = Mockery::mock(ThrowPipe::class);
+
+        $exception = fn()=>true;
+
+        $this->app->bind(
+            ThrowPipe::class,
+            function($app, $parameters) use ($throwPipe, $exception) {
+                $this->assertSame($exception, $parameters['throwable']);
+                return $throwPipe;
+            }
+        );
+
+        $this->assertSame((new PipeFactory())->throw($exception), $throwPipe);
+    }
+
+    public function testResolvesEachPipe(){
+        $throwPipe = Mockery::mock(EachPipe::class);
+
+        $pipes = [
+            AdapterPipe::class,
+            ThrowPipe::class,
+        ];
+
+        $this->app->bind(
+            EachPipe::class,
+            function($app, $parameters) use ($throwPipe, $pipes) {
+                $this->assertSame($pipes, $parameters['pipes']);
+                return $throwPipe;
+            }
+        );
+
+        $this->assertSame((new PipeFactory())->each($pipes), $throwPipe);
     }
 }

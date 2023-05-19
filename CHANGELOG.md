@@ -2,6 +2,11 @@
 
 All notable changes to `Laravel Pipeline Factory` will be documented in this file
 
+## 1.3.0 - 2023-05-19
+
+- added [The Each Pipe](docs/each.md)
+- added [The Throw Pipe](docs/throw.md)
+
 ## 1.2.0 - 2023-05-18
 
 - added [The Job Pipe](docs/job.md)
