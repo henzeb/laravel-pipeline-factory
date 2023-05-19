@@ -19,6 +19,7 @@ use Henzeb\Pipeline\Pipes\RescuePipe;
 use Henzeb\Pipeline\Pipes\ResolvingPipe;
 use Henzeb\Pipeline\Pipes\ThrowPipe;
 use Henzeb\Pipeline\Pipes\TransactionPipe;
+use Henzeb\Pipeline\Pipes\WhilePipe;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Support\Str;
 use Mockery;
@@ -554,5 +555,90 @@ class PipeFactoryTest extends TestCase
         );
 
         $this->assertSame((new PipeFactory())->each($pipes), $throwPipe);
+    }
+
+    public function testResolvesWhilePipe() {
+        $whilePipe = Mockery::mock(WhilePipe::class);
+        $condition = Mockery::mock(PipeCondition::class);
+
+        $pipes = [
+            EachPipe::class
+        ];
+
+        $this->app->bind(
+            WhilePipe::class,
+            function($app, $parameters) use ($whilePipe, $condition, $pipes) {
+                $this->assertSame($pipes, $parameters['pipes']);
+                $this->assertSame($condition, $parameters['condition']);
+                return $whilePipe;
+            }
+        );
+
+        $this->assertSame($whilePipe, (new PipeFactory())->while($condition, $pipes));
+    }
+
+    public function testResolvesWhilePipeWithClosure() {
+        $whilePipe = Mockery::mock(WhilePipe::class);
+        $condition = function($passable) {
+            return $passable === 'hello';
+        };
+
+
+        $this->app->bind(
+            WhilePipe::class,
+            function($app, $parameters) use ($whilePipe) {
+                $this->assertSame([], $parameters['pipes']);
+                $this->assertTrue($parameters['condition']->test('hello'));
+                $this->assertFalse($parameters['condition']->test('world'));
+                return $whilePipe;
+            }
+        );
+
+        $this->assertSame($whilePipe, (new PipeFactory())->while($condition));
+    }
+
+    public function testResolvesUntilPipe() {
+        $whilePipe = Mockery::mock(WhilePipe::class);
+        $condition = new class implements PipeCondition {
+            public function test($passable): bool {
+                return $passable === 'hello';
+            }
+        };
+
+        $pipes = [
+            EachPipe::class
+        ];
+
+        $this->app->bind(
+            WhilePipe::class,
+            function($app, $parameters) use ($whilePipe, $condition, $pipes) {
+                $this->assertSame($pipes, $parameters['pipes']);
+                $this->assertFalse($parameters['condition']->test('hello'));
+                $this->assertTrue($parameters['condition']->test('world'));
+                return $whilePipe;
+            }
+        );
+
+        $this->assertSame($whilePipe, (new PipeFactory())->until($condition, $pipes));
+    }
+
+    public function testResolvesUntilPipeWithClosure() {
+        $whilePipe = Mockery::mock(WhilePipe::class);
+        $condition = function($passable) {
+            return $passable === 'hello';
+        };
+
+
+        $this->app->bind(
+            WhilePipe::class,
+            function($app, $parameters) use ($whilePipe) {
+                $this->assertSame([], $parameters['pipes']);
+                $this->assertFalse($parameters['condition']->test('hello'));
+                $this->assertTrue($parameters['condition']->test('world'));
+                return $whilePipe;
+            }
+        );
+
+        $this->assertSame($whilePipe, (new PipeFactory())->until($condition));
     }
 }

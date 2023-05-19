@@ -1,6 +1,6 @@
-# The Transactional Pipe
+# The Transaction Pipe
 
-The transactional pipe allows you to execute one or more pipes within a Database
+The transaction pipe allows you to execute one or more pipes within a Database
 Transaction. If one of the pipes fails it rolls back.
 
 ````php

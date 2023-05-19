@@ -18,6 +18,9 @@ use Henzeb\Pipeline\Pipes\RescuePipe;
 use Henzeb\Pipeline\Pipes\ResolvingPipe;
 use Henzeb\Pipeline\Pipes\ThrowPipe;
 use Henzeb\Pipeline\Pipes\TransactionPipe;
+use Henzeb\Pipeline\Pipes\WhilePipe;
+use Henzeb\Pipeline\Support\Conditions\ClosurePipeCondition;
+use Henzeb\Pipeline\Support\Conditions\UnlessPipeCondition;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Support\Str;
 use Throwable;
@@ -139,6 +142,33 @@ class PipeFactory
     public function each(mixed $pipes): EachPipe
     {
         return resolve(EachPipe::class, ['pipes' => $pipes]);
+    }
+
+    public function while(PipeCondition|Closure $condition, mixed $pipes = []): WhilePipe
+    {
+        return resolve(
+            WhilePipe::class,
+            [
+                'condition' => $condition instanceof Closure
+                    ? resolve(ClosurePipeCondition::class, ['closure' => $condition])
+                    : $condition,
+                'pipes' => $pipes
+            ]
+        );
+    }
+
+    public function until(PipeCondition|Closure $condition, mixed $pipes = []): WhilePipe
+    {
+        return $this->while(
+            resolve(UnlessPipeCondition::class,
+                [
+                    'condition' => $condition instanceof Closure
+                        ? resolve(ClosurePipeCondition::class, ['closure' => $condition])
+                        : $condition
+                ]
+            ),
+            $pipes
+        );
     }
 
     private function fromCallable(callable|string|null $callable): ?Closure

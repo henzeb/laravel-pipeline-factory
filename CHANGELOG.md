@@ -2,6 +2,10 @@
 
 All notable changes to `Laravel Pipeline Factory` will be documented in this file
 
+## 1.4.0 - 2023-05-19
+
+- added [The While Pipe](docs/while.md)
+
 ## 1.3.0 - 2023-05-19
 
 - added [The Each Pipe](docs/each.md)

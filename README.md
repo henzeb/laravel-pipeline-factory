@@ -62,13 +62,16 @@ The following pipes are available:
 - [The Adapter Pipe](docs/adapter.md)
 - [The Conditional Pipe](docs/conditional.md)
 - [The Contextless Pipe](docs/contextless.md)
-- [The Job Pipe](docs/job.md)
+- [The Definition Pipe](docs/definition.md)
+- [The Each Pipe](docs/each.md)
 - [The Events Pipe](docs/events.md)
+- [The Job Pipe](docs/job.md)
 - [The Queue Pipe](docs/queue.md)
 - [The Rescue Pipe](docs/rescue.md)
 - [The Resolving Pipe](docs/resolving.md)
-- [The Transactional Pipe](docs/transaction.md)
 - [The Throw Pipe](docs/throw.md)
+- [The Transaction Pipe](docs/transaction.md)
+- [The While / Until Pipe](docs/while.md)
 
 ## Testing this package
 

@@ -6,6 +6,7 @@ use Closure;
 use Henzeb\Pipeline\Concerns\HandlesPipe;
 use Henzeb\Pipeline\Contracts\HasPipes;
 use Henzeb\Pipeline\Contracts\PipeCondition;
+use Henzeb\Pipeline\Support\Conditions\ClosurePipeCondition;
 use Illuminate\Support\Arr;
 
 class ConditionalPipe implements HasPipes
@@ -82,13 +83,16 @@ class ConditionalPipe implements HasPipes
         return $this;
     }
 
-    private function prepareCondition(PipeCondition|Closure $condition): Closure
+    private function prepareCondition(PipeCondition|Closure $condition): PipeCondition
     {
         if ($condition instanceof Closure) {
-            return $condition;
+            return resolve(
+                ClosurePipeCondition::class,
+                ['closure' => $condition]
+            );
         }
 
-        return fn(mixed $passable): bool => $condition->test($passable);
+        return $condition;
     }
 
     private function getPipesBasedOnConditions(mixed $passable): array
@@ -110,7 +114,7 @@ class ConditionalPipe implements HasPipes
     private function getUnlessPipesBasedOnCondition(mixed $passable, array $pipes, bool $stopProcessing): array
     {
         foreach ($this->unless as $unless) {
-            if (!$unless['condition']($passable)) {
+            if (!$unless['condition']->test($passable)) {
                 array_push($pipes, ...$unless['pipes']);
                 $stopProcessing = $stopProcessing ?: ($this->stopIfUnlessMatches ?: $unless['stop']);
             }
@@ -124,7 +128,7 @@ class ConditionalPipe implements HasPipes
         $pipes = [];
 
         foreach ($this->when as $when) {
-            if ($when['condition']($passable)) {
+            if ($when['condition']->test($passable)) {
                 array_push($pipes, ...$when['pipes']);
                 $stopProcessing = $stopProcessing ?: ($this->stopIfWhenMatches ?: $when['stop']);
             }
